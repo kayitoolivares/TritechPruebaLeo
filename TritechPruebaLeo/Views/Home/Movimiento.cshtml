@@ -1,0 +1,413 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+    List<movimiento> movimientos = ViewBag.Movimiento;
+
+    List<producto> productos = ViewBag.Productos;
+    List<contenedor> contenedores = ViewBag.conten;// new List<contenedor>();
+}
+
+<div class="row">
+    <h4>Movimientos</h4>
+</div>
+
+<div class="row g-4">
+    <div class="col-md"></div>
+    <div class="col-md"></div>
+    <div class="col-md">
+        <button type="button" class="btn btn-primary" onclick="NewMovimiento(true)">
+            Agregar Entrada
+        </button>
+    </div>
+    <div class="col-md">
+        <button type="button" class="btn btn-primary" onclick="NewMovimiento(false)">
+            Agregar Salida
+        </button>
+    </div>
+</div>
+
+<div class="row">
+
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th scope="col">#NoMovimiento</th>
+                <th scope="col">tipo</th>
+                <th scope="col">Estatus</th>
+            </tr>
+        </thead>
+        <tbody id="tbody">
+            @foreach (var item in movimientos)
+            {
+                <tr>
+                    <th scope="row">Mov-@item.id</th>
+                    <td>@item.tipo</td>
+                    <td>
+                        @if (item.estatus.Equals("a"))
+                        {
+                            <p>Editable</p>
+                        }
+                        else
+                        {
+                            <p>Finalizado</p>
+                        }
+                                    </td>
+                    <td><button class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#exampleModal" onclick='Editar(@Json.Serialize(item))'>Editar/Ver</button></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog  modal-xl">
+        <div class="modal-content">
+            <div id="formid">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Agregar Producto</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p id="textop"></p>
+                    <div  id="formularioDetalle" class="row">
+                        <div class="col-2" id="ids1">
+                            <div class="form-floating">
+                                <select class="form-select" id="noParte_producto" aria-label="Floating label select example">
+                                    @foreach (var item in productos)
+                                    {
+                                        <option value="@item.noParte">@item.noParte - @item.nombre</option>
+                                    }
+                                </select>
+                                <label>NoParte</label>
+                            </div>
+                        </div>
+                        <div class="col-2" id="ids2">
+                            <div class="form-floating">
+                                <select class="form-select" id="id_contenedor" aria-label="Floating label select example">
+                                    @foreach (var item in contenedores)
+                                    {
+                                        <option value="@item.id">@item.tipo </option>
+                                    }
+                                </select>
+                                <label>Contenedor</label>
+                            </div>
+                        </div>
+                        <div class="col-2" id="ids3">
+                            <div class="form-floating">
+                                <input class="form-control" type="number" required id="idcantidadXContenedor" value="" />
+                                <label>CantidadXcontenedore</label>
+                            </div>
+                        </div>
+                        <div class="col-2" id="ids4">
+
+                            <div class="form-floating">
+                                <input class="form-control" type="number" required id="idcontenedorXPallet" value="" />
+                                <label>Contenedore X Pallet</label>
+                            </div>
+                        </div>
+
+                        <div class="col-4" id="ids5">
+                            <button class="btn btn-success" onclick="NewMovimientoDetalle()">AgregarDetalle</button> 
+                        </div>
+
+                    </div>
+                    <input type="number" hidden="hidden" id="idMovimiento" value="" />
+                    <input type="number" hidden="hidden" id="idMovimientoestatus" value="" />
+                    <div class="row">
+                        <div class="col-md-9"></div>
+                        <div class="col-md-3">
+                            <button type="button" class="btn btn-primary" onclick="afectaMovimiento(this)" id="idbotonAfectar">Afectar</button>
+                        </div>
+
+                    </div>
+                    <div class="row">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th scope="col">#NoParte</th>
+                                    <th scope="col">Contenedor</th>
+                                    <th scope="col">PiezaXContenedor</th>
+                                    <th scope="col">ContenedorXPallet</th>
+                                    <th scope="col">total</th>
+                                    <th scope="col"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="tablaDetalle">
+                            </tbody>
+                        </table>
+                    </div>
+
+                </div>
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">cerrar</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+    <div id="liveToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-header">
+
+            <strong class="me-auto">Alerta</strong>
+            <small></small>
+            <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body" id="alertaa">
+            Hello, world! This is a toast message.
+        </div>
+    </div>
+</div>
+
+
+<script type="text/javascript">
+    function NewMovimiento(b) {
+        // document.getElementById("formid").style.display = "none";
+        var tipo = "";
+
+        if (b) {
+            tip = "entrada";
+        } else {
+            tip = "salida";
+        }
+
+
+        $.ajax({
+            type: "POST",
+            url: "/Home/setMovimiento",
+            dataType: "json",
+            data: {
+                movimiento: {
+                    tipo: tip,
+                    estatus: "a"
+                }
+            },
+            statusCode: {
+                401: function () {
+                    console.log("Error 401")
+                    window.location.assign(window.location.href);
+                }
+            },
+            success: function (result) {
+
+                var toastLiveExample = document.getElementById('liveToast');
+                var toast = new bootstrap.Toast(toastLiveExample);
+                toast.show();
+                console.log(result);
+                document.getElementById('alertaa').innerHTML = result.msj;
+                if (result.estatus == 1) {
+                    location.reload();
+                } else {
+
+                }
+
+                toast.show();
+            }
+        });
+
+
+    }
+
+    function Editar(item) {
+        console.log(item)
+        document.getElementById('textop').innerHTML = 'Mov-' + item.id + '  ////   Tipo:' + item.tipo;
+
+        document.getElementById('idMovimiento').value = item.id;
+        document.getElementById('idMovimientoestatus').value = item.estatus;
+        if (item.estatus == 'b') {
+            document.getElementById("idbotonAfectar").style.display = "none";
+            //document.getElementById("formularioDetalle").style.display = "none";
+            document.getElementById("ids1").style.display = "none";
+            document.getElementById("ids2").style.display = "none";
+            document.getElementById("ids3").style.display = "none";
+            document.getElementById("ids4").style.display = "none";
+            document.getElementById("ids5").style.display = "none";
+           // document.getElementsByClassName("btn btn-danger btnEliminarDetalle").style.display = "none";
+            
+
+           }
+         else {
+            document.getElementById("idbotonAfectar").style.display = "block";
+
+            document.getElementById("ids1").style.display = "block";
+            document.getElementById("ids2").style.display = "block";
+            document.getElementById("ids3").style.display = "block";
+            document.getElementById("ids4").style.display = "block";
+            document.getElementById("ids5").style.display = "block";
+            //document.getElementById("formularioDetalle").style.display = "block";
+
+           // document.getElementsByClassName("btn btn-danger btnEliminarDetalle").style.display = "block";
+        }
+
+        getDetalle();
+
+        
+
+
+    }
+</script>
+
+<script type="text/javascript">
+    function NewMovimientoDetalle() {
+
+
+        var var_id_movimiento = document.getElementById('idMovimiento').value;
+        var var_noParte_producto = document.getElementById('noParte_producto').value;
+        var var_id_contenedor = document.getElementById('id_contenedor').value;
+        var var_piezasXContenedor = document.getElementById('idcantidadXContenedor').value;
+        var var_contenedorXPallet = document.getElementById('idcontenedorXPallet').value;
+
+
+
+
+
+        $.ajax({
+            type: "POST",
+            url: "/Home/setDetalle",
+            dataType: "json",
+            data: {
+                md: {
+                    id_movimiento: var_id_movimiento,
+                    noParte_producto: var_noParte_producto,
+                    id_contenedor: var_id_contenedor,
+                    piezasXContenedor: var_piezasXContenedor,
+                    contenedorXPallet: var_contenedorXPallet
+
+                }
+            },
+            statusCode: {
+                401: function () {
+                    console.log("Error 401")
+                    window.location.assign(window.location.href);
+                }
+            },
+            success: function (result) {
+
+                var toastLiveExample = document.getElementById('liveToast');
+                var toast = new bootstrap.Toast(toastLiveExample);
+                toast.show();
+                console.log(result);
+                document.getElementById('alertaa').innerHTML = result.msj;
+                if (result.estatus == 1) {
+                    // location.reload();
+                    getDetalle();
+                } else {
+
+                }
+
+                toast.show();
+            }
+        });
+
+
+    }
+
+    function afectaMovimiento(b) {
+        var ids = document.getElementById('idMovimiento').value;
+        b.innerHTML = 'Afectando';
+        $.ajax({
+            type: "POST",
+            url: "/Home/afectaMovimiento",
+            dataType: "json",
+            data: {
+                id: ids
+            },
+            statusCode: {
+                401: function () {
+                    console.log("Error 401")
+                    window.location.assign(window.location.href);
+                }
+            },
+            success: function (result) {
+                console.log(result)
+                var toastLiveExample = document.getElementById('liveToast');
+                var toast = new bootstrap.Toast(toastLiveExample);
+                toast.show();
+                console.log(result);
+                document.getElementById('alertaa').innerHTML = result.msj;
+                if (result.estatus > 0) {
+                     location.reload();
+                    //getDetalle();
+                } else {
+                    b.innerHTML = 'Afectar';
+                }
+
+                toast.show();
+
+
+            }
+        });
+    }
+
+</script>
+<script>
+    function eliminarDetalle(ids) {
+        $.ajax({
+            type: "POST",
+            url: "/Home/deleteDetalle",
+            dataType: "json",
+            data: {
+                id: ids
+            },
+            statusCode: {
+                401: function () {
+                    console.log("Error 401")
+                    window.location.assign(window.location.href);
+                }
+            },
+            success: function (result) {
+                console.log(result)
+                getDetalle();
+                
+            }
+        });
+    }
+</script>
+
+
+<script type="text/javascript">
+    function getDetalle() {
+        var ids = document.getElementById('idMovimiento').value;
+        var estatus = document.getElementById('idMovimientoestatus').value;
+        document.getElementById('tablaDetalle').innerHTML = 'Cargando....';
+        $.ajax({
+            type: "POST",
+            url: "/Home/GetDetalle",
+            dataType: "json",
+            data: {
+                id: ids
+            },
+            statusCode: {
+                401: function () {
+                    console.log("Error 401")
+                    window.location.assign(window.location.href);
+                }
+            },
+            success: function (result) {
+                console.log(result)
+
+                document.getElementById('tablaDetalle').innerHTML = '';
+                for (const property in result) {
+                    if (estatus == 'a') {
+
+
+                        /**/
+                        document.getElementById('tablaDetalle').innerHTML += '<tr><th scope="row">' + result[property].noParte_producto + '</th><td>' + result[property].contenedor.tipo + '</td><td>' + result[property].piezasXContenedor + '</td><td>' + result[property].contenedorXPallet + '</td><td>' + result[property].totalPiezas + '</td><td><button type="button" class="btn btn-danger" onclick="eliminarDetalle(' + result[property].id + ')">X</button> </td>   </tr>';
+                        /**/
+
+                    } else {
+                        document.getElementById('tablaDetalle').innerHTML += '<tr><th scope="row">' + result[property].noParte_producto + '</th><td>' + result[property].contenedor.tipo + '</td><td>' + result[property].piezasXContenedor + '</td><td>' + result[property].contenedorXPallet + '</td><td>' + result[property].totalPiezas + '</td><td> </td>   </tr>';
+                    }
+                }
+            }
+        });
+    }
+</script>
+
+
